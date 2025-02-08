@@ -9,16 +9,30 @@
 
 
 <script type="module">
-    interface Config {
-    walletPrivateKey: string;
+  interface Config {
     rpcUrl: string;
     nftContractAddress: string;
 }
 
-async function setupWallet(config: Config) {
-    const wallet = new ethers.Wallet(config.walletPrivateKey);
-    const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
-    return wallet.connect(provider);
+async function setupWallet() {
+    if (!window.ethereum) {
+        throw new Error('Please install MetaMask first!');
+    }
+
+    // Request account access
+    const accounts = await window.ethereum.request({
+        method: 'eth_requestAccounts'
+    });
+
+    if (!accounts || accounts.length === 0) {
+        throw new Error('No accounts found in MetaMask');
+    }
+
+    // Create provider and signer
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner(accounts[0]);
+
+    return signer;
 }
 
 async function mintNFT(signer: ethers.Signer, contractAddress: string) {
@@ -51,13 +65,16 @@ async function mintNFT(signer: ethers.Signer, contractAddress: string) {
 
 async function main() {
     const config: Config = {
-        walletPrivateKey: process.env.PRIVATE_KEY!,
         rpcUrl: process.env.RPC_URL!,
         nftContractAddress: process.env.CONTRACT_ADDRESS!
     };
 
-    const signer = await setupWallet(config);
-    await mintNFT(signer, config.nftContractAddress);
+    try {
+        const signer = await setupWallet();
+        await mintNFT(signer, config.nftContractAddress);
+    } catch (error) {
+        console.error('Error:', error);
+    }
 }
 
 main().catch(console.error);
