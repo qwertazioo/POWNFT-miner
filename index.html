@@ -9,12 +9,7 @@
 
 
 <script type="module">
-  interface Config {
-    rpcUrl: string;
-    nftContractAddress: string;
-}
-
-async function setupWallet() {
+    async function setupWallet() {
     if (!window.ethereum) {
         throw new Error('Please install MetaMask first!');
     }
@@ -35,39 +30,9 @@ async function setupWallet() {
     return signer;
 }
 
-async function mintNFT(signer: ethers.Signer, contractAddress: string) {
-    const contract = new ethers.Contract(contractAddress, [
-        {
-            constant: false,
-            inputs: [],
-            name: "mint",
-            outputs: [{
-                name: "",
-                type: "uint256"
-            }],
-            payable: true,
-            stateMutability: "payable",
-            type: "function"
-        }
-    ], signer);
-
-    try {
-        const tx = await contract.mint({
-            value: ethers.utils.parseEther("0.1")
-        });
-        console.log(`Mint transaction sent: ${tx.hash}`);
-        await tx.wait();
-        console.log('NFT minted successfully!');
-    } catch (error) {
-        console.error('Mint failed:', error);
-    }
-}
-
+   const signer = await setupWallet();
 async function main() {
-    const config: Config = {
-        rpcUrl: process.env.RPC_URL!,
-        nftContractAddress: process.env.CONTRACT_ADDRESS!
-    };
+   
 
     try {
         const signer = await setupWallet();
